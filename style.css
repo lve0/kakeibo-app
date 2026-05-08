@@ -49,3 +49,60 @@
     height: 470px;
   }
 }
+
+
+/* v8: 年間グラフは「表示6ヶ月・中身12ヶ月」で固定 */
+.stack-scroll-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 0 12px;
+  scrollbar-color: #8a8a8a #eeeeee;
+  scrollbar-width: thin;
+  border-radius: 16px;
+}
+
+.stack-scroll-wrap::-webkit-scrollbar {
+  height: 10px;
+}
+
+.stack-scroll-wrap::-webkit-scrollbar-track {
+  background: #eeeeee;
+  border-radius: 999px;
+}
+
+.stack-scroll-wrap::-webkit-scrollbar-thumb {
+  background: #8a8a8a;
+  border-radius: 999px;
+}
+
+#stackCanvas {
+  display: block;
+  height: 470px;
+  max-width: none;
+  touch-action: pan-x;
+}
+
+.chart-card.is-stack #graphCanvas {
+  display: none !important;
+}
+
+.chart-card.is-stack #stackScrollWrap {
+  display: block !important;
+}
+
+.chart-card:not(.is-stack) #stackScrollWrap {
+  display: none !important;
+}
+
+.chart-card.is-stack {
+  overflow: hidden;
+}
+
+.scroll-hint {
+  color: #777;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 6px;
+}
