@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "kakeibo-green-v1-20260508";
+const CACHE_NAME = "kakeibo-svg-icons-v1-20260508";
 const ASSETS = ["./", "./index.html", "./style.css", "./app.js", "./manifest.json"];
 
 self.addEventListener("install", event => {

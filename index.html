@@ -11,24 +11,24 @@
   <div class="app-shell">
     <aside class="side-nav">
       <div class="brand">
-        <div class="brand-mark">💰</div>
+        <div class="brand-mark" data-icon="wallet"></div>
         <div>
           <strong>家計簿アプリ</strong>
           <span>袋分け家計簿</span>
         </div>
       </div>
-      <button class="nav active" data-page="home">🏠<span>ホーム</span></button>
-      <button class="nav" data-page="input">＋<span>入力</span></button>
-      <button class="nav" data-page="history">📄<span>履歴</span></button>
-      <button class="nav" data-page="graphs">📊<span>グラフ</span></button>
-      <button class="nav" data-page="settings">⚙️<span>設定</span></button>
+      <button class="nav active" data-page="home"><span data-icon="home"></span><span>ホーム</span></button>
+      <button class="nav" data-page="input"><span data-icon="plus"></span><span>入力</span></button>
+      <button class="nav" data-page="history"><span data-icon="list"></span><span>履歴</span></button>
+      <button class="nav" data-page="graphs"><span data-icon="chart"></span><span>グラフ</span></button>
+      <button class="nav" data-page="settings"><span data-icon="settings"></span><span>設定</span></button>
     </aside>
 
     <main class="main">
       <section id="home" class="page active">
         <header class="mobile-header">
           <h1>ホーム</h1>
-          <button class="icon-button">🔔</button>
+          <button class="icon-button" aria-label="通知"><span data-icon="bell"></span></button>
         </header>
 
         <section class="hero-balance">
@@ -90,7 +90,7 @@
       <section id="history" class="page">
         <header class="mobile-header">
           <h1>履歴</h1>
-          <button class="icon-button">🔍</button>
+          <button class="icon-button" aria-label="検索"><span data-icon="search"></span></button>
         </header>
 
         <div class="month-row">
@@ -197,11 +197,11 @@
   </div>
 
   <nav class="bottom-nav">
-    <button class="bottom active" data-page="home">🏠<span>ホーム</span></button>
-    <button class="bottom" data-page="input">＋<span>入力</span></button>
-    <button class="bottom" data-page="history">📄<span>履歴</span></button>
-    <button class="bottom" data-page="graphs">📊<span>グラフ</span></button>
-    <button class="bottom" data-page="settings">⚙️<span>設定</span></button>
+    <button class="bottom active" data-page="home"><span data-icon="home"></span><span>ホーム</span></button>
+    <button class="bottom" data-page="input"><span data-icon="plus"></span><span>入力</span></button>
+    <button class="bottom" data-page="history"><span data-icon="list"></span><span>履歴</span></button>
+    <button class="bottom" data-page="graphs"><span data-icon="chart"></span><span>グラフ</span></button>
+    <button class="bottom" data-page="settings"><span data-icon="settings"></span><span>設定</span></button>
   </nav>
 
   <script src="app.js"></script>

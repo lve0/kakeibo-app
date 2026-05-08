@@ -1,14 +1,34 @@
 
+const iconSvg = {
+  home: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>',
+  plus: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+  list: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>',
+  chart: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16V9"/><path d="M12 16V6"/><path d="M16 16v-4"/></svg>',
+  settings: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1.08 1.65V21a2 2 0 1 1-4 0v-.08a1.8 1.8 0 0 0-1.08-1.65 1.8 1.8 0 0 0-2 .36l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05a1.8 1.8 0 0 0 .36-2 1.8 1.8 0 0 0-1.65-1.08H3a2 2 0 1 1 0-4h.08A1.8 1.8 0 0 0 4.73 8.6a1.8 1.8 0 0 0-.36-2l-.05-.05A2 2 0 1 1 7.15 3.7l.05.05a1.8 1.8 0 0 0 2 .36A1.8 1.8 0 0 0 10.28 2.5V2a2 2 0 1 1 4 0v.08a1.8 1.8 0 0 0 1.08 1.65 1.8 1.8 0 0 0 2-.36l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05a1.8 1.8 0 0 0-.36 2 1.8 1.8 0 0 0 1.65 1.08H21a2 2 0 1 1 0 4h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg>',
+  wallet: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 7.5h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2h13"/><path d="M16 13.5h5"/><path d="M17.5 13.5h.01"/></svg>',
+  bell: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',
+  search: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  food: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 3v8"/><path d="M4 3v8"/><path d="M10 3v8"/><path d="M4 11h6"/><path d="M7 11v10"/><path d="M17 3v18"/><path d="M14 3c0 5 1 8 3 8"/></svg>',
+  daily: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/><path d="M9 13h6"/></svg>',
+  transport: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M6 4h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M4 10h16"/><path d="M8 18l-2 3"/><path d="M16 18l2 3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>',
+  social: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>',
+  hobby: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M7 15h10l2 3a2 2 0 0 0 3-2l-2-7a4 4 0 0 0-4-3H8a4 4 0 0 0-4 3l-2 7a2 2 0 0 0 3 2l2-3Z"/><path d="M8 11h4"/><path d="M10 9v4"/><path d="M16 10h.01"/><path d="M18 13h.01"/></svg>',
+  beauty: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M10 21V11l4-8 4 8v10"/><path d="M10 11h8"/><path d="M13 3v8"/></svg>',
+  medical: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 21s8-4 8-10V5l-8-3-8 3v6c0 6 8 10 8 10Z"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>',
+  education: '<svg class="svg-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M8 6h8"/></svg>',
+  other: '<svg class="svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>'
+};
+
 const categoriesDefault = [
-  { name: "食費", icon: "🍴", color: "#0f9864" },
-  { name: "日用品", icon: "🛍️", color: "#f59e0b" },
-  { name: "交通費", icon: "🚌", color: "#0aa174" },
-  { name: "交際費", icon: "🌸", color: "#f55772" },
-  { name: "娯楽・趣味", icon: "🎮", color: "#7c5ce1" },
-  { name: "美容・衣服", icon: "💄", color: "#ef476f" },
-  { name: "医療・保険", icon: "🛡️", color: "#1698a8" },
-  { name: "教育・学習", icon: "📘", color: "#369bd6" },
-  { name: "その他", icon: "…", color: "#999999" }
+  { name: "食費", icon: "food", color: "#0f9864" },
+  { name: "日用品", icon: "daily", color: "#f59e0b" },
+  { name: "交通費", icon: "transport", color: "#0aa174" },
+  { name: "交際費", icon: "social", color: "#f55772" },
+  { name: "娯楽・趣味", icon: "hobby", color: "#7c5ce1" },
+  { name: "美容・衣服", icon: "beauty", color: "#ef476f" },
+  { name: "医療・保険", icon: "medical", color: "#1698a8" },
+  { name: "教育・学習", icon: "education", color: "#369bd6" },
+  { name: "その他", icon: "other", color: "#999999" }
 ];
 
 const yen = n => "¥" + Math.round(Number(n || 0)).toLocaleString("ja-JP");
@@ -25,16 +45,27 @@ let graphMode = "monthly";
 let state = loadState();
 
 function loadState() {
-  const saved = localStorage.getItem("kakeibo-green-v1") || localStorage.getItem("kakeiboStateV2") || localStorage.getItem("kakeiboState");
+  const saved = localStorage.getItem("kakeibo-svg-icons-v1") || localStorage.getItem("kakeibo-green-v1") || localStorage.getItem("kakeiboStateV2") || localStorage.getItem("kakeiboState");
   if (saved) {
     try {
       const s = JSON.parse(saved);
       if (!s.categoriesMeta) {
         s.categoriesMeta = categoriesDefault;
         if (Array.isArray(s.categories)) {
-          s.categoriesMeta = s.categories.map((name, i) => categoriesDefault.find(c => c.name === name) || { name, icon: "●", color: categoriesDefault[i % categoriesDefault.length].color });
+          s.categoriesMeta = s.categories.map((name, i) => {
+            const preset = categoriesDefault.find(c => c.name === name);
+            return preset || { name, icon: "other", color: categoriesDefault[i % categoriesDefault.length].color };
+          });
         }
       }
+      s.categoriesMeta = s.categoriesMeta.map((c, i) => {
+        const preset = categoriesDefault.find(p => p.name === c.name);
+        return {
+          name: c.name,
+          icon: preset ? preset.icon : (iconSvg[c.icon] ? c.icon : "other"),
+          color: preset ? preset.color : (c.color || categoriesDefault[i % categoriesDefault.length].color)
+        };
+      });
       s.months ||= {};
       s.expenses ||= [];
       return s;
@@ -44,7 +75,14 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem("kakeibo-green-v1", JSON.stringify(state));
+  localStorage.setItem("kakeibo-svg-icons-v1", JSON.stringify(state));
+}
+
+function renderStaticIcons() {
+  document.querySelectorAll("[data-icon]").forEach(el => {
+    const key = el.dataset.icon;
+    el.innerHTML = iconSvg[key] || iconSvg.other;
+  });
 }
 
 function categoryNames() {
@@ -52,7 +90,12 @@ function categoryNames() {
 }
 
 function meta(name) {
-  return state.categoriesMeta.find(c => c.name === name) || { name, icon: "●", color: "#0f9864" };
+  return state.categoriesMeta.find(c => c.name === name) || { name, icon: "other", color: "#0f9864" };
+}
+
+function iconHtml(nameOrKey) {
+  const key = iconSvg[nameOrKey] ? nameOrKey : meta(nameOrKey).icon;
+  return iconSvg[key] || iconSvg.other;
 }
 
 function ensureMonth(m) {
@@ -73,11 +116,6 @@ function spentByCategory(m, cat) {
 
 function totalSpent(m) {
   return monthExpenses(m).reduce((sum, e) => sum + Number(e.amount || 0), 0);
-}
-
-function totalBudget(m) {
-  ensureMonth(m);
-  return categoryNames().reduce((s, c) => s + Number(state.months[m].budgets[c] || 0), 0);
 }
 
 function statusClass(budget, spent) {
@@ -186,7 +224,7 @@ document.getElementById("saveMonthSettings").addEventListener("click", () => {
 document.getElementById("addCategory").addEventListener("click", () => {
   const name = document.getElementById("newCategoryName").value.trim();
   if (!name || categoryNames().includes(name)) return;
-  state.categoriesMeta.push({ name, icon: "●", color: "#0f9864" });
+  state.categoriesMeta.push({ name, icon: "other", color: "#0f9864" });
   Object.keys(state.months).forEach(m => state.months[m].budgets[name] = 0);
   document.getElementById("newCategoryName").value = "";
   saveState();
@@ -210,6 +248,7 @@ document.getElementById("importData").addEventListener("change", async e => {
 });
 
 function render() {
+  renderStaticIcons();
   ensureMonth(selectedMonth);
   renderHome();
   renderInput();
@@ -235,14 +274,14 @@ function renderHome() {
     return `
       <article class="category-card ${st}" data-category="${cat}">
         <div class="cat-main">
-          <div class="cat-icon" style="color:${m.color};background:${hexToSoft(m.color)}">${m.icon}</div>
+          <div class="cat-icon" style="color:${m.color};background:${hexToSoft(m.color)}">${iconHtml(cat)}</div>
           <div>
             <div class="cat-name">${cat}</div>
             <div class="cat-left">${yen(left)}</div>
           </div>
           <div class="chevron">›</div>
         </div>
-        <div class="progress ${st}"><span style="width:${pct}%; background:${st === "safe" ? "var(--green)" : ""}"></span></div>
+        <div class="progress ${st}"><span style="width:${pct}%"></span></div>
         <div class="cat-meta">
           <span>予算 ${yen(budget)}</span>
           <span>使った額 ${yen(used)}</span>
@@ -259,7 +298,7 @@ function rowHtml(e) {
   const m = meta(e.category);
   return `
     <div class="list-row">
-      <div class="cat-icon" style="color:${m.color};background:${hexToSoft(m.color)}">${m.icon}</div>
+      <div class="cat-icon" style="color:${m.color};background:${hexToSoft(m.color)}">${iconHtml(e.category)}</div>
       <div><strong>${e.category}</strong><small>${e.memo || "メモなし"}　${e.date}</small></div>
       <strong>${yen(e.amount)}</strong>
     </div>`;
@@ -267,10 +306,9 @@ function rowHtml(e) {
 
 function renderInput() {
   document.getElementById("categoryPicker").innerHTML = categoryNames().map(cat => {
-    const m = meta(cat);
     return `
       <button type="button" class="pick-card ${cat === selectedCategory ? "active" : ""}" data-pick="${cat}">
-        <span class="pick-icon">${m.icon}</span>
+        <span class="pick-icon">${iconHtml(cat)}</span>
         <span>${cat}</span>
       </button>`;
   }).join("");
@@ -306,19 +344,17 @@ function renderSettings() {
   document.getElementById("settingIncome").value = state.months[selectedMonth].income || 0;
 
   document.getElementById("budgetInputs").innerHTML = categoryNames().map(cat => {
-    const m = meta(cat);
     return `
       <div class="budget-row">
-        <strong>${m.icon} ${cat}</strong>
+        <strong class="budget-label">${iconHtml(cat)} ${cat}</strong>
         <input data-budget="${cat}" type="number" inputmode="numeric" value="${state.months[selectedMonth].budgets[cat] || 0}">
       </div>`;
   }).join("");
 
   document.getElementById("categorySettings").innerHTML = categoryNames().map(cat => {
-    const m = meta(cat);
     return `
       <div class="setting-row">
-        <span>${m.icon} ${cat}</span>
+        <span class="budget-label">${iconHtml(cat)} ${cat}</span>
         <button onclick="deleteCategory('${cat}')">削除</button>
       </div>`;
   }).join("");
@@ -340,7 +376,6 @@ function openCategoryDetail(cat) {
   const used = spentByCategory(selectedMonth, cat);
   const left = budget - used;
   const rate = budget ? used / budget : 0;
-  const m = meta(cat);
   const items = monthExpenses(selectedMonth).filter(e => e.category === cat).slice().reverse();
 
   document.getElementById("detailTitle").textContent = cat;
