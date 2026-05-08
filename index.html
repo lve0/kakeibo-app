@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>袋分け家計簿</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">袋分け家計簿</div>
+      <nav>
+        <button class="nav-btn active" data-page="home">ホーム</button>
+        <button class="nav-btn" data-page="input">支出入力</button>
+        <button class="nav-btn" data-page="history">履歴</button>
+        <button class="nav-btn" data-page="graphs">グラフ</button>
+        <button class="nav-btn" data-page="settings">設定</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <section id="home" class="page active-page">
+        <div class="page-header">
+          <div>
+            <h1>ホーム</h1>
+            <p class="muted" id="currentMonthLabel"></p>
+          </div>
+          <button class="primary" data-page-jump="input">＋ 支出を追加</button>
+        </div>
+
+        <div class="summary-grid">
+          <div class="card"><span>収入</span><strong id="incomeView">¥0</strong></div>
+          <div class="card"><span>支出</span><strong id="expenseView">¥0</strong></div>
+          <div class="card highlight"><span>残金</span><strong id="balanceView">¥0</strong></div>
+        </div>
+
+        <h2>カテゴリ残高</h2>
+        <div id="categoryCards" class="category-grid"></div>
+
+        <div class="bottom-grid">
+          <div class="card">
+            <h2>最近の支出</h2>
+            <div id="recentList" class="list"></div>
+          </div>
+          <div class="card">
+            <h2>月間内訳</h2>
+            <canvas id="pieCanvas" width="360" height="260"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section id="input" class="page">
+        <h1>支出を追加</h1>
+        <div class="form-card">
+          <label>日付<input id="expenseDate" type="date" /></label>
+          <label>金額<input id="expenseAmount" type="number" inputmode="numeric" placeholder="例：1200" /></label>
+          <label>カテゴリ<select id="expenseCategory"></select></label>
+          <label>メモ<input id="expenseMemo" type="text" placeholder="例：スタバ" /></label>
+          <label>レシート画像<input id="receiptImage" type="file" accept="image/*" /></label>
+          <button id="saveExpense" class="primary">保存する</button>
+          <p id="inputMessage" class="message"></p>
+        </div>
+      </section>
+
+      <section id="history" class="page">
+        <h1>履歴</h1>
+        <div class="history-layout">
+          <div class="card filters">
+            <h2>フィルター</h2>
+            <label>月<input id="filterMonth" type="month" /></label>
+            <label>カテゴリ<select id="filterCategory"></select></label>
+            <label>キーワード<input id="filterKeyword" type="text" placeholder="メモ検索" /></label>
+          </div>
+          <div class="card">
+            <h2>カテゴリ別月間集計</h2>
+            <div id="monthlyTotals" class="list"></div>
+            <h2>支出一覧</h2>
+            <div id="historyList" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="graphs" class="page">
+        <h1>グラフ</h1>
+        <div class="tabs">
+          <button class="tab active" data-graph="annual">年間</button>
+          <button class="tab" data-graph="monthly">月間</button>
+          <button class="tab" data-graph="trend">推移</button>
+        </div>
+        <div class="card graph-card">
+          <canvas id="graphCanvas" width="900" height="420"></canvas>
+        </div>
+      </section>
+
+      <section id="settings" class="page">
+        <h1>設定</h1>
+        <div class="settings-layout">
+          <div class="card">
+            <h2>月初設定</h2>
+            <label>対象月<input id="settingMonth" type="month" /></label>
+            <label>今月の収入<input id="settingIncome" type="number" /></label>
+            <h3>カテゴリ予算</h3>
+            <div id="budgetInputs"></div>
+            <button id="saveMonthSettings" class="primary">保存</button>
+          </div>
+
+          <div class="card">
+            <h2>カテゴリ管理</h2>
+            <div id="categorySettings"></div>
+            <div class="row">
+              <input id="newCategoryName" placeholder="カテゴリ名" />
+              <button id="addCategory">追加</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>通知</h2>
+            <label class="check"><input id="dailyReminderOn" type="checkbox" /> 毎日リマインド</label>
+            <label>時間<input id="dailyReminderTime" type="time" value="21:00" /></label>
+            <p class="muted">本格通知はサーバー追加後に対応予定。初期版では設定だけ保存します。</p>
+          </div>
+
+          <div class="card">
+            <h2>データ管理</h2>
+            <button id="exportData">JSONバックアップ</button>
+            <label class="file-label">復元<input id="importData" type="file" accept="application/json" /></label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
