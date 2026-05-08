@@ -1,9 +1,6 @@
 {
-  "name": "袋分け家計簿",
-  "short_name": "家計簿",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#fbfaf7",
-  "theme_color": "#0f9864",
-  "icons": []
+"name":"Kakeibo App",
+"short_name":"Kakeibo",
+"start_url":"./index.html",
+"display":"standalone"
 }
