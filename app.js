@@ -1,1 +1,564 @@
-const defaultCategories=["食費","日用品","交通費","交際費","趣味","美容","固定費","その他"];const icons={"食費":"🍴","日用品":"🛍️","交通費":"🚌","交際費":"🌸","趣味":"🎮","美容":"💄","固定費":"🏠","その他":"🟠"};const colors=["#18a969","#4a90e2","#7d58d8","#ef477a","#f2a20d","#ff6b7a","#8c7a70","#f6b23f"];const yen=n=>"¥"+Math.round(Number(n||0)).toLocaleString("ja-JP");const ym=(date=new Date())=>date.toISOString().slice(0,7);const today=()=>new Date().toISOString().slice(0,10);const jpMonth=m=>m.replace("-","年")+"月";let selectedMonth=ym(),selectedCategory="食費",graphMode="annual",state=loadState();function loadState(){const saved=localStorage.getItem("kakeiboStateV2")||localStorage.getItem("kakeiboState");if(saved){const p=JSON.parse(saved);p.categories||=defaultCategories;p.months||={};p.expenses||=[];p.settings||={};return p}return{categories:defaultCategories,months:{},expenses:[],settings:{dailyReminderOn:false,dailyReminderTime:"21:00"}}}function saveState(){localStorage.setItem("kakeiboStateV2",JSON.stringify(state))}function ensureMonth(m){if(!state.months[m])state.months[m]={income:0,budgets:Object.fromEntries(state.categories.map(c=>[c,0]))};state.months[m].budgets||={};state.categories.forEach(c=>{if(state.months[m].budgets[c]===undefined)state.months[m].budgets[c]=0})}function monthExpenses(m){return state.expenses.filter(e=>e.date&&e.date.startsWith(m))}function categorySpent(m,c){return monthExpenses(m).filter(e=>e.category===c).reduce((s,e)=>s+Number(e.amount||0),0)}function totalSpent(m){return monthExpenses(m).reduce((s,e)=>s+Number(e.amount||0),0)}function budgetTotal(m){ensureMonth(m);return state.categories.reduce((s,c)=>s+Number(state.months[m].budgets[c]||0),0)}function categoryStatus(b,u){if(!b)return{key:"safe",label:"余裕あり",rate:0};const r=u/b;if(r>=1)return{key:"over",label:"超過",rate:r};if(r>=.9)return{key:"danger",label:"注意",rate:r};if(r>=.7)return{key:"warn",label:"やや注意",rate:r};return{key:"safe",label:"余裕あり",rate:r}}function shiftMonth(m,diff){const[y,mn]=m.split("-").map(Number),d=new Date(y,mn-1+diff,1);return ym(d)}function setPage(id){document.querySelectorAll(".page").forEach(p=>p.classList.remove("active-page"));document.getElementById(id).classList.add("active-page");document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===id));render()}document.addEventListener("click",e=>{const nav=e.target.closest("[data-page]");if(nav)setPage(nav.dataset.page);const jump=e.target.closest("[data-page-jump]");if(jump){closeCategorySheet();setPage(jump.dataset.pageJump)}const card=e.target.closest("[data-category-card]");if(card)openCategorySheet(card.dataset.categoryCard);const tab=e.target.closest("[data-graph]");if(tab){graphMode=tab.dataset.graph;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.graph===graphMode));renderGraph()}});document.getElementById("prevMonth").addEventListener("click",()=>{selectedMonth=shiftMonth(selectedMonth,-1);render()});document.getElementById("nextMonth").addEventListener("click",()=>{selectedMonth=shiftMonth(selectedMonth,1);render()});document.getElementById("closeSheet").addEventListener("click",closeCategorySheet);document.getElementById("categorySheet").addEventListener("click",e=>{if(e.target.id==="categorySheet")closeCategorySheet()});document.getElementById("expenseDate").value=today();document.getElementById("filterMonth").value=selectedMonth;document.getElementById("settingMonth").value=selectedMonth;document.getElementById("expenseForm").addEventListener("submit",e=>{e.preventDefault();const date=document.getElementById("expenseDate").value||today(),amount=Number(document.getElementById("expenseAmount").value),category=selectedCategory,memo=document.getElementById("expenseMemo").value.trim(),receiptName=document.getElementById("receiptImage").files[0]?.name||"";if(!amount||amount<=0)return showMessage("金額を入力してね");state.expenses.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),date,amount,category,memo,receiptName});saveState();document.getElementById("expenseAmount").value="";document.getElementById("expenseMemo").value="";document.getElementById("receiptImage").value="";showMessage("保存しました");selectedMonth=date.slice(0,7);render()});function showMessage(t){const m=document.getElementById("inputMessage");m.textContent=t;setTimeout(()=>m.textContent="",1800)}document.getElementById("saveMonthSettings").addEventListener("click",()=>{const m=document.getElementById("settingMonth").value||selectedMonth;ensureMonth(m);state.months[m].income=Number(document.getElementById("settingIncome").value||0);state.categories.forEach(c=>{const input=document.querySelector(`[data-budget="${CSS.escape(c)}"]`);state.months[m].budgets[c]=Number(input?.value||0)});selectedMonth=m;saveState();render()});document.getElementById("addCategory").addEventListener("click",()=>{const name=document.getElementById("newCategoryName").value.trim();if(!name||state.categories.includes(name))return;state.categories.push(name);Object.keys(state.months).forEach(m=>state.months[m].budgets[name]=0);document.getElementById("newCategoryName").value="";saveState();render()});document.getElementById("exportData").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="kakeibo-backup.json";a.click()});document.getElementById("importData").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;state=JSON.parse(await f.text());saveState();render()});["filterMonth","filterCategory","filterKeyword"].forEach(id=>document.getElementById(id).addEventListener("input",renderHistory));function render(){ensureMonth(selectedMonth);renderSelectors();renderHome();renderHistory();renderSettings();renderGraph()}function renderSelectors(){const options=state.categories.map(c=>`<option value="${c}">${c}</option>`).join("");document.getElementById("filterCategory").innerHTML=`<option value="">すべて</option>${options}`;document.getElementById("categoryPicker").innerHTML=state.categories.map(c=>`<button type="button" class="pick-card ${c===selectedCategory?"active":""}" data-pick="${c}"><span>${icons[c]||"●"}</span><strong>${c}</strong></button>`).join("");document.querySelectorAll("[data-pick]").forEach(btn=>{btn.onclick=()=>{selectedCategory=btn.dataset.pick;renderSelectors()}})}function renderHome(){const data=state.months[selectedMonth],spent=totalSpent(selectedMonth),bTotal=budgetTotal(selectedMonth),balance=Number(data.income||0)-spent,budgetRate=bTotal?Math.round(spent/bTotal*1000)/10:0;document.getElementById("currentMonthLabel").textContent=jpMonth(selectedMonth);document.getElementById("balanceView").textContent=yen(balance);document.getElementById("expenseView").textContent=yen(spent);document.getElementById("budgetTotalView").textContent=yen(bTotal);document.getElementById("budgetRateView").textContent=`予算比 ${budgetRate}%`;document.getElementById("categoryCards").innerHTML=state.categories.map(c=>{const budget=Number(data.budgets[c]||0),used=categorySpent(selectedMonth,c),left=budget-used,status=categoryStatus(budget,used),pct=budget?Math.min(status.rate*100,100):0;return`<article class="budget-card ${status.key}-card" data-category-card="${c}"><div class="budget-top"><span class="cat-icon">${icons[c]||"●"}</span><strong>${c}</strong></div><div><div class="budget-left-label">残り</div><div class="budget-left">${yen(left)}</div></div><div class="progress ${status.key}"><span style="width:${pct}%"></span></div><div class="budget-meta"><span>予算 ${yen(budget)}</span><span>使った額 ${yen(used)}</span><span>${Math.round(status.rate*100)}%</span></div></article>`}).join("");const recent=monthExpenses(selectedMonth).slice(-5).reverse();document.getElementById("recentList").innerHTML=recent.map(e=>`<div class="list-item"><span>${icons[e.category]||"●"} ${e.category}<small>${e.date}　${e.memo||"メモなし"}</small></span><strong>${yen(e.amount)}</strong></div>`).join("")||`<p>まだ支出がありません</p>`;drawPie("homePie",state.categories.map(c=>categorySpent(selectedMonth,c)),"カテゴリ別 支出割合")}function renderHistory(){const month=document.getElementById("filterMonth").value||selectedMonth,cat=document.getElementById("filterCategory").value,keyword=document.getElementById("filterKeyword").value.trim();let items=monthExpenses(month);if(cat)items=items.filter(e=>e.category===cat);if(keyword)items=items.filter(e=>(e.memo||"").includes(keyword));document.getElementById("monthlyTotals").innerHTML=state.categories.map(c=>`<div class="list-item"><span>${icons[c]||"●"} ${c}</span><strong>${yen(categorySpent(month,c))}</strong></div>`).join("");document.getElementById("historyList").innerHTML=items.slice().reverse().map(e=>`<div class="list-item"><span>${icons[e.category]||"●"} ${e.category}<small>${e.date}　${e.memo||"メモなし"}</small></span><strong>${yen(e.amount)}</strong></div>`).join("")||`<p>該当する支出がありません</p>`}function renderSettings(){ensureMonth(selectedMonth);const data=state.months[selectedMonth];document.getElementById("settingMonth").value=selectedMonth;document.getElementById("settingIncome").value=data.income||0;document.getElementById("budgetSumView").textContent=`合計 ${yen(budgetTotal(selectedMonth))}`;document.getElementById("budgetInputs").innerHTML=state.categories.map(c=>`<div class="budget-row"><strong>${icons[c]||"●"} ${c}</strong><input data-budget="${c}" type="number" inputmode="numeric" value="${data.budgets[c]||0}" /></div>`).join("");document.querySelectorAll("[data-budget]").forEach(input=>{input.addEventListener("input",()=>{const sum=Array.from(document.querySelectorAll("[data-budget]")).reduce((s,el)=>s+Number(el.value||0),0);document.getElementById("budgetSumView").textContent=`合計 ${yen(sum)}`})});document.getElementById("categorySettings").innerHTML=state.categories.map(c=>`<div class="list-item"><span>${icons[c]||"●"} ${c}</span><button onclick="deleteCategory('${c}')">削除</button></div>`).join("")}window.deleteCategory=function(name){if(state.categories.length<=1)return;state.categories=state.categories.filter(c=>c!==name);Object.keys(state.months).forEach(m=>delete state.months[m].budgets[name]);state.expenses=state.expenses.filter(e=>e.category!==name);if(selectedCategory===name)selectedCategory=state.categories[0];saveState();render()};function openCategorySheet(category){selectedCategory=category;const sheet=document.getElementById("categorySheet");sheet.hidden=false;renderCategorySheet(category)}function closeCategorySheet(){document.getElementById("categorySheet").hidden=true}function renderCategorySheet(category){ensureMonth(selectedMonth);const budget=Number(state.months[selectedMonth].budgets[category]||0),used=categorySpent(selectedMonth,category),left=budget-used,status=categoryStatus(budget,used),items=monthExpenses(selectedMonth).filter(e=>e.category===category).slice().reverse(),day=new Date().getDate(),avg=day?used/day:used,remainingDays=Math.max(1,new Date(Number(selectedMonth.slice(0,4)),Number(selectedMonth.slice(5,7)),0).getDate()-day+1),perDayLeft=left/remainingDays;document.getElementById("sheetTitle").textContent=`${category}の詳細`;document.getElementById("sheetContent").innerHTML=`<section class="detail-hero"><div class="budget-top"><span class="cat-icon">${icons[category]||"●"}</span><strong>${category}</strong></div><div class="detail-stats"><div class="stat-box"><span>予算</span><strong>${yen(budget)}</strong></div><div class="stat-box"><span>使った額</span><strong>${yen(used)}</strong></div><div class="stat-box"><span>残り</span><strong>${yen(left)}</strong></div></div><div class="progress ${status.key}"><span style="width:${Math.min(status.rate*100,100)}%"></span></div><div class="budget-meta" style="margin-top:8px"><span>${Math.round(status.rate*100)}%</span><span>${status.label}</span></div></section><div class="detail-stats"><div class="stat-box"><span>平均/日</span><strong>${yen(avg)}</strong></div><div class="stat-box"><span>使える金額/日</span><strong>${yen(perDayLeft)}</strong></div><div class="stat-box"><span>残り日数</span><strong>${remainingDays}日</strong></div></div><section class="panel" style="box-shadow:none;margin-top:12px"><div class="panel-title"><h2>今月の支出履歴</h2><button class="ghost" data-page-jump="input">＋ 支出追加</button></div><div class="list">${items.map(e=>`<div class="list-item"><span>${e.memo||category}<small>${e.date}${e.receiptName?"　📎 "+e.receiptName:""}</small></span><strong>${yen(e.amount)}</strong></div>`).join("")||"<p>このカテゴリの支出はまだありません</p>"}</div></section><section class="panel" style="box-shadow:none;margin-top:12px"><h2>${category}の推移</h2><canvas id="sheetTrend"></canvas></section>`;drawTrend("sheetTrend",category,`${category}の月別推移`)}function renderGraph(){if(graphMode==="monthly")return drawPie("graphCanvas",state.categories.map(c=>categorySpent(selectedMonth,c)),"月間カテゴリ割合");if(graphMode==="trend")return drawTrend("graphCanvas",selectedCategory||state.categories[0],"カテゴリ推移");drawAnnual("graphCanvas")}function setupCanvas(id){const canvas=document.getElementById(id);if(!canvas)return null;const rect=canvas.getBoundingClientRect(),dpr=Math.max(window.devicePixelRatio||1,2),width=Math.max(280,rect.width),height=Math.max(240,rect.height);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);const ctx=canvas.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);return{canvas,ctx,width,height}}function drawText(ctx,text,x,y,size=18,weight="700",color="#252525"){ctx.fillStyle=color;ctx.font=`${weight} ${size}px -apple-system,BlinkMacSystemFont,sans-serif`;ctx.fillText(text,x,y)}function drawPie(id,values,title){const c=setupCanvas(id);if(!c)return;const{ctx,width,height}=c,total=values.reduce((a,b)=>a+b,0);drawText(ctx,title,20,32,18,"800");if(!total)return drawText(ctx,"データなし",width/2-45,height/2,16,"700","#79716a");const radius=Math.min(width*.25,height*.32,105),cx=Math.min(width*.38,210),cy=height*.55;let start=-Math.PI/2;values.forEach((v,i)=>{if(!v)return;const angle=v/total*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,start,start+angle);ctx.fillStyle=colors[i%colors.length];ctx.fill();start+=angle});ctx.beginPath();ctx.arc(cx,cy,radius*.48,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();drawText(ctx,"合計",cx-18,cy-4,12,"700","#79716a");drawText(ctx,yen(total),cx-42,cy+18,16,"900");const legendX=width<520?20:Math.min(width*.64,460),legendY=width<520?height-110:height*.35;state.categories.forEach((cat,i)=>{if(!values[i])return;const y=legendY+i*22;if(y>height-12)return;ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.arc(legendX,y-5,5,0,Math.PI*2);ctx.fill();drawText(ctx,cat,legendX+12,y,12,"700");drawText(ctx,`${Math.round(values[i]/total*1000)/10}%`,legendX+90,y,12,"700","#79716a")})}function drawAnnual(id){const c=setupCanvas(id);if(!c)return;const{ctx,width,height}=c,year=selectedMonth.slice(0,4),values=Array.from({length:12},(_,i)=>totalSpent(`${year}-${String(i+1).padStart(2,"0")}`)),max=Math.max(...values,1);drawText(ctx,"年間支出",20,32,18,"800");const padL=42,padR=18,padB=42,padT=60,chartW=width-padL-padR,chartH=height-padT-padB;ctx.strokeStyle="#eee4db";ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=padT+chartH*i/4;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(width-padR,y);ctx.stroke()}const gap=chartW/12,barW=Math.max(10,Math.min(34,gap*.52));values.forEach((v,i)=>{const h=v/max*chartH,x=padL+gap*i+(gap-barW)/2,y=padT+chartH-h;ctx.fillStyle="#b9a896";roundRect(ctx,x,y,barW,h,8);ctx.fill();drawText(ctx,`${i+1}月`,x-1,height-15,11,"700","#79716a")})}function drawTrend(id,category,title){const c=setupCanvas(id);if(!c)return;const{ctx,width,height}=c,year=selectedMonth.slice(0,4),values=Array.from({length:12},(_,i)=>categorySpent(`${year}-${String(i+1).padStart(2,"0")}`,category)),max=Math.max(...values,1);drawText(ctx,title,20,32,18,"800");drawText(ctx,`表示中：${category}`,20,55,13,"700","#79716a");const padL=42,padR=18,padB=42,padT=72,chartW=width-padL-padR,chartH=height-padT-padB;ctx.strokeStyle="#eee4db";ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=padT+chartH*i/4;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(width-padR,y);ctx.stroke()}ctx.strokeStyle="#8f7d6e";ctx.lineWidth=4;ctx.lineJoin="round";ctx.lineCap="round";ctx.beginPath();values.forEach((v,i)=>{const x=padL+chartW*i/11,y=padT+chartH-v/max*chartH;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.stroke();values.forEach((v,i)=>{const x=padL+chartW*i/11,y=padT+chartH-v/max*chartH;ctx.fillStyle="#8f7d6e";ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();if(i%2===0||width>520)drawText(ctx,`${i+1}月`,x-9,height-15,11,"700","#79716a")})}function roundRect(ctx,x,y,w,h,r){const radius=Math.min(r,w/2,Math.abs(h)/2);ctx.beginPath();ctx.moveTo(x+radius,y);ctx.arcTo(x+w,y,x+w,y+h,radius);ctx.arcTo(x+w,y+h,x,y+h,radius);ctx.arcTo(x,y+h,x,y,radius);ctx.arcTo(x,y,x+w,y,radius);ctx.closePath()}let resizeTimer;window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(render,150)});if("serviceWorker"in navigator)navigator.serviceWorker.register("./service-worker.js");render();
+
+const categoriesDefault = [
+  { name: "食費", icon: "🍴", color: "#0f9864" },
+  { name: "日用品", icon: "🛍️", color: "#f59e0b" },
+  { name: "交通費", icon: "🚌", color: "#0aa174" },
+  { name: "交際費", icon: "🌸", color: "#f55772" },
+  { name: "娯楽・趣味", icon: "🎮", color: "#7c5ce1" },
+  { name: "美容・衣服", icon: "💄", color: "#ef476f" },
+  { name: "医療・保険", icon: "🛡️", color: "#1698a8" },
+  { name: "教育・学習", icon: "📘", color: "#369bd6" },
+  { name: "その他", icon: "…", color: "#999999" }
+];
+
+const yen = n => "¥" + Math.round(Number(n || 0)).toLocaleString("ja-JP");
+const ym = (d = new Date()) => d.toISOString().slice(0, 7);
+const today = () => new Date().toISOString().slice(0, 10);
+const jpMonth = m => {
+  const [y, mo] = m.split("-");
+  return `${y}年${Number(mo)}月`;
+};
+
+let selectedMonth = ym();
+let selectedCategory = "食費";
+let graphMode = "monthly";
+let state = loadState();
+
+function loadState() {
+  const saved = localStorage.getItem("kakeibo-green-v1") || localStorage.getItem("kakeiboStateV2") || localStorage.getItem("kakeiboState");
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      if (!s.categoriesMeta) {
+        s.categoriesMeta = categoriesDefault;
+        if (Array.isArray(s.categories)) {
+          s.categoriesMeta = s.categories.map((name, i) => categoriesDefault.find(c => c.name === name) || { name, icon: "●", color: categoriesDefault[i % categoriesDefault.length].color });
+        }
+      }
+      s.months ||= {};
+      s.expenses ||= [];
+      return s;
+    } catch {}
+  }
+  return { categoriesMeta: categoriesDefault, months: {}, expenses: [] };
+}
+
+function saveState() {
+  localStorage.setItem("kakeibo-green-v1", JSON.stringify(state));
+}
+
+function categoryNames() {
+  return state.categoriesMeta.map(c => c.name);
+}
+
+function meta(name) {
+  return state.categoriesMeta.find(c => c.name === name) || { name, icon: "●", color: "#0f9864" };
+}
+
+function ensureMonth(m) {
+  if (!state.months[m]) state.months[m] = { income: 0, budgets: {} };
+  state.months[m].budgets ||= {};
+  categoryNames().forEach(c => {
+    if (state.months[m].budgets[c] === undefined) state.months[m].budgets[c] = 0;
+  });
+}
+
+function monthExpenses(m) {
+  return state.expenses.filter(e => e.date && e.date.startsWith(m));
+}
+
+function spentByCategory(m, cat) {
+  return monthExpenses(m).filter(e => e.category === cat).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+}
+
+function totalSpent(m) {
+  return monthExpenses(m).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+}
+
+function totalBudget(m) {
+  ensureMonth(m);
+  return categoryNames().reduce((s, c) => s + Number(state.months[m].budgets[c] || 0), 0);
+}
+
+function statusClass(budget, spent) {
+  if (!budget) return "safe";
+  const r = spent / budget;
+  if (r >= 1) return "over";
+  if (r >= 0.9) return "danger";
+  if (r >= 0.7) return "warn";
+  return "safe";
+}
+
+function changePage(id) {
+  closeModal();
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".nav, .bottom").forEach(b => b.classList.toggle("active", b.dataset.page === id));
+  render();
+  scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.addEventListener("click", e => {
+  const pageBtn = e.target.closest("[data-page]");
+  if (pageBtn) changePage(pageBtn.dataset.page);
+
+  const jump = e.target.closest("[data-page-jump]");
+  if (jump) changePage(jump.dataset.pageJump);
+
+  const cat = e.target.closest("[data-category]");
+  if (cat) openCategoryDetail(cat.dataset.category);
+
+  if (e.target.closest("[data-close-modal]")) closeModal();
+
+  const tab = e.target.closest("[data-graph]");
+  if (tab) {
+    graphMode = tab.dataset.graph;
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.graph === graphMode));
+    drawGraph();
+  }
+});
+
+document.getElementById("expenseDate").value = today();
+document.getElementById("filterMonth").value = selectedMonth;
+document.getElementById("settingMonth").value = selectedMonth;
+
+document.getElementById("expenseForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const amount = Number(document.getElementById("expenseAmount").value);
+  const date = document.getElementById("expenseDate").value || today();
+  const memo = document.getElementById("expenseMemo").value.trim();
+  if (!amount || amount <= 0) return message("金額を入力してね");
+
+  state.expenses.push({
+    id: String(Date.now()),
+    date,
+    amount,
+    category: selectedCategory,
+    memo
+  });
+  selectedMonth = date.slice(0, 7);
+  saveState();
+
+  document.getElementById("expenseAmount").value = "";
+  document.getElementById("expenseMemo").value = "";
+  message("保存しました");
+  render();
+});
+
+function message(text) {
+  const el = document.getElementById("inputMessage");
+  el.textContent = text;
+  setTimeout(() => el.textContent = "", 1600);
+}
+
+["filterMonth", "filterCategory", "filterKeyword"].forEach(id => {
+  document.getElementById(id).addEventListener("input", renderHistory);
+});
+
+document.getElementById("historyPrev").addEventListener("click", () => {
+  document.getElementById("filterMonth").value = shiftMonth(document.getElementById("filterMonth").value || selectedMonth, -1);
+  renderHistory();
+});
+
+document.getElementById("historyNext").addEventListener("click", () => {
+  document.getElementById("filterMonth").value = shiftMonth(document.getElementById("filterMonth").value || selectedMonth, 1);
+  renderHistory();
+});
+
+function shiftMonth(m, diff) {
+  const [y, mo] = m.split("-").map(Number);
+  return ym(new Date(y, mo - 1 + diff, 1));
+}
+
+document.getElementById("saveMonthSettings").addEventListener("click", () => {
+  const m = document.getElementById("settingMonth").value || selectedMonth;
+  ensureMonth(m);
+  state.months[m].income = Number(document.getElementById("settingIncome").value || 0);
+  categoryNames().forEach(c => {
+    const input = document.querySelector(`[data-budget="${CSS.escape(c)}"]`);
+    state.months[m].budgets[c] = Number(input?.value || 0);
+  });
+  selectedMonth = m;
+  saveState();
+  render();
+});
+
+document.getElementById("addCategory").addEventListener("click", () => {
+  const name = document.getElementById("newCategoryName").value.trim();
+  if (!name || categoryNames().includes(name)) return;
+  state.categoriesMeta.push({ name, icon: "●", color: "#0f9864" });
+  Object.keys(state.months).forEach(m => state.months[m].budgets[name] = 0);
+  document.getElementById("newCategoryName").value = "";
+  saveState();
+  render();
+});
+
+document.getElementById("exportData").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "kakeibo-backup.json";
+  a.click();
+});
+
+document.getElementById("importData").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  state = JSON.parse(await file.text());
+  saveState();
+  render();
+});
+
+function render() {
+  ensureMonth(selectedMonth);
+  renderHome();
+  renderInput();
+  renderHistory();
+  renderSettings();
+  drawGraph();
+}
+
+function renderHome() {
+  const income = Number(state.months[selectedMonth].income || 0);
+  const spent = totalSpent(selectedMonth);
+  document.getElementById("balanceView").textContent = yen(income - spent);
+  document.getElementById("monthLabel").textContent = jpMonth(selectedMonth);
+
+  document.getElementById("categoryCards").innerHTML = categoryNames().map(cat => {
+    const m = meta(cat);
+    const budget = Number(state.months[selectedMonth].budgets[cat] || 0);
+    const used = spentByCategory(selectedMonth, cat);
+    const left = budget - used;
+    const rate = budget ? used / budget : 0;
+    const pct = Math.min(rate * 100, 100);
+    const st = statusClass(budget, used);
+    return `
+      <article class="category-card ${st}" data-category="${cat}">
+        <div class="cat-main">
+          <div class="cat-icon" style="color:${m.color};background:${hexToSoft(m.color)}">${m.icon}</div>
+          <div>
+            <div class="cat-name">${cat}</div>
+            <div class="cat-left">${yen(left)}</div>
+          </div>
+          <div class="chevron">›</div>
+        </div>
+        <div class="progress ${st}"><span style="width:${pct}%; background:${st === "safe" ? "var(--green)" : ""}"></span></div>
+        <div class="cat-meta">
+          <span>予算 ${yen(budget)}</span>
+          <span>使った額 ${yen(used)}</span>
+          <span>${Math.round(rate * 100)}%</span>
+        </div>
+      </article>`;
+  }).join("");
+
+  const recent = monthExpenses(selectedMonth).slice(-4).reverse();
+  document.getElementById("recentList").innerHTML = recent.map(e => rowHtml(e)).join("") || "<p>まだ支出がありません</p>";
+}
+
+function rowHtml(e) {
+  const m = meta(e.category);
+  return `
+    <div class="list-row">
+      <div class="cat-icon" style="color:${m.color};background:${hexToSoft(m.color)}">${m.icon}</div>
+      <div><strong>${e.category}</strong><small>${e.memo || "メモなし"}　${e.date}</small></div>
+      <strong>${yen(e.amount)}</strong>
+    </div>`;
+}
+
+function renderInput() {
+  document.getElementById("categoryPicker").innerHTML = categoryNames().map(cat => {
+    const m = meta(cat);
+    return `
+      <button type="button" class="pick-card ${cat === selectedCategory ? "active" : ""}" data-pick="${cat}">
+        <span class="pick-icon">${m.icon}</span>
+        <span>${cat}</span>
+      </button>`;
+  }).join("");
+
+  document.querySelectorAll("[data-pick]").forEach(b => {
+    b.onclick = () => {
+      selectedCategory = b.dataset.pick;
+      renderInput();
+    };
+  });
+}
+
+function renderHistory() {
+  const m = document.getElementById("filterMonth").value || selectedMonth;
+  ensureMonth(m);
+  const cat = document.getElementById("filterCategory").value;
+  const kw = document.getElementById("filterKeyword").value.trim();
+  document.getElementById("historyExpenseTotal").textContent = yen(totalSpent(m));
+  document.getElementById("historyIncomeTotal").textContent = yen(state.months[m].income || 0);
+  document.getElementById("filterCategory").innerHTML = `<option value="">すべて</option>` + categoryNames().map(c => `<option value="${c}">${c}</option>`).join("");
+  document.getElementById("filterCategory").value = cat;
+
+  let items = monthExpenses(m);
+  if (cat) items = items.filter(e => e.category === cat);
+  if (kw) items = items.filter(e => (e.memo || "").includes(kw));
+
+  document.getElementById("historyList").innerHTML = items.slice().reverse().map(rowHtml).join("") || "<p>該当する支出がありません</p>";
+}
+
+function renderSettings() {
+  ensureMonth(selectedMonth);
+  document.getElementById("settingMonth").value = selectedMonth;
+  document.getElementById("settingIncome").value = state.months[selectedMonth].income || 0;
+
+  document.getElementById("budgetInputs").innerHTML = categoryNames().map(cat => {
+    const m = meta(cat);
+    return `
+      <div class="budget-row">
+        <strong>${m.icon} ${cat}</strong>
+        <input data-budget="${cat}" type="number" inputmode="numeric" value="${state.months[selectedMonth].budgets[cat] || 0}">
+      </div>`;
+  }).join("");
+
+  document.getElementById("categorySettings").innerHTML = categoryNames().map(cat => {
+    const m = meta(cat);
+    return `
+      <div class="setting-row">
+        <span>${m.icon} ${cat}</span>
+        <button onclick="deleteCategory('${cat}')">削除</button>
+      </div>`;
+  }).join("");
+}
+
+window.deleteCategory = function(cat) {
+  if (categoryNames().length <= 1) return;
+  state.categoriesMeta = state.categoriesMeta.filter(c => c.name !== cat);
+  Object.keys(state.months).forEach(m => delete state.months[m].budgets[cat]);
+  state.expenses = state.expenses.filter(e => e.category !== cat);
+  selectedCategory = categoryNames()[0];
+  saveState();
+  render();
+};
+
+function openCategoryDetail(cat) {
+  selectedCategory = cat;
+  const budget = Number(state.months[selectedMonth].budgets[cat] || 0);
+  const used = spentByCategory(selectedMonth, cat);
+  const left = budget - used;
+  const rate = budget ? used / budget : 0;
+  const m = meta(cat);
+  const items = monthExpenses(selectedMonth).filter(e => e.category === cat).slice().reverse();
+
+  document.getElementById("detailTitle").textContent = cat;
+  document.getElementById("detailContent").innerHTML = `
+    <section class="detail-hero">
+      <p>今月の残り予算</p>
+      <div class="cat-left">${yen(left)}</div>
+      <p>予算 ${yen(budget)}　残り ${Math.max(0, Math.round((1-rate)*100))}%</p>
+      <div class="progress safe"><span style="width:${Math.min(rate*100,100)}%"></span></div>
+    </section>
+    <div class="detail-stats">
+      <div class="stat"><span>平均/日</span><strong>${yen(used / Math.max(1, new Date().getDate()))}</strong></div>
+      <div class="stat"><span>使った金額</span><strong>${yen(used)}</strong></div>
+      <div class="stat"><span>残り</span><strong>${yen(left)}</strong></div>
+    </div>
+    <section class="card">
+      <div class="section-title inner">
+        <h2>最近の支出</h2>
+        <button data-page-jump="history">すべて見る</button>
+      </div>
+      <div class="list">${items.map(rowHtml).join("") || "<p>このカテゴリの支出はまだありません</p>"}</div>
+    </section>
+    <section class="card chart-card">
+      <h2>支出の推移</h2>
+      <canvas id="detailChart"></canvas>
+    </section>
+  `;
+  document.getElementById("detailModal").hidden = false;
+  setTimeout(() => drawTrend("detailChart", cat), 30);
+}
+
+function closeModal() {
+  document.getElementById("detailModal").hidden = true;
+}
+
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return null;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.max(window.devicePixelRatio || 1, 2);
+  const width = Math.max(280, rect.width);
+  const height = Math.max(260, rect.height || 320);
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  return { canvas, ctx, width, height };
+}
+
+function drawGraph() {
+  const title = document.getElementById("graphTitle");
+  if (!title) return;
+  if (graphMode === "monthly") {
+    title.textContent = "カテゴリ別 支出割合";
+    drawPie("graphCanvas");
+  } else if (graphMode === "annual") {
+    title.textContent = "月別 支出の推移";
+    drawBars("graphCanvas");
+  } else {
+    title.textContent = `${selectedCategory}の推移`;
+    drawTrend("graphCanvas", selectedCategory);
+  }
+}
+
+function drawPie(id) {
+  const c = setupCanvas(id);
+  if (!c) return;
+  const { ctx, width, height } = c;
+  const vals = categoryNames().map(cat => spentByCategory(selectedMonth, cat));
+  const total = vals.reduce((a,b) => a+b, 0);
+  const cx = width * 0.34;
+  const cy = height * 0.48;
+  const r = Math.min(width, height) * 0.26;
+
+  if (!total) {
+    drawText(ctx, "データなし", width/2 - 40, height/2, 16, "#777", "700");
+    return;
+  }
+
+  let start = -Math.PI / 2;
+  vals.forEach((v, i) => {
+    if (!v) return;
+    const angle = v / total * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + angle);
+    ctx.fillStyle = meta(categoryNames()[i]).color;
+    ctx.fill();
+    start += angle;
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * .48, 0, Math.PI * 2);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+
+  drawText(ctx, "合計", cx - 16, cy - 4, 12, "#777", "800");
+  drawText(ctx, yen(total), cx - 45, cy + 20, 17, "#111", "900");
+
+  const lx = width < 460 ? 24 : width * 0.63;
+  const ly = width < 460 ? height - 105 : height * 0.25;
+  categoryNames().forEach((cat, i) => {
+    if (!vals[i]) return;
+    const y = ly + i * 22;
+    if (y > height - 10) return;
+    ctx.fillStyle = meta(cat).color;
+    ctx.beginPath();
+    ctx.arc(lx, y - 5, 5, 0, Math.PI * 2);
+    ctx.fill();
+    drawText(ctx, cat, lx + 12, y, 12, "#333", "700");
+    drawText(ctx, `${Math.round(vals[i]/total*1000)/10}%`, lx + 105, y, 12, "#777", "700");
+  });
+}
+
+function drawBars(id) {
+  const c = setupCanvas(id);
+  if (!c) return;
+  const { ctx, width, height } = c;
+  const year = selectedMonth.slice(0,4);
+  const vals = Array.from({length:12}, (_,i) => totalSpent(`${year}-${String(i+1).padStart(2,"0")}`));
+  const max = Math.max(...vals, 1);
+  const left = 36, right = 14, top = 28, bottom = 34;
+  const w = width - left - right;
+  const h = height - top - bottom;
+
+  grid(ctx, left, top, w, h);
+  const gap = w / 12;
+  const barW = Math.min(28, gap * .5);
+  vals.forEach((v,i) => {
+    const bh = v / max * h;
+    const x = left + gap*i + (gap-barW)/2;
+    const y = top + h - bh;
+    roundRect(ctx, x, y, barW, bh, 8, "#67c899");
+    drawText(ctx, `${i+1}月`, x-2, height-12, 11, "#777", "700");
+  });
+}
+
+function drawTrend(id, cat) {
+  const c = setupCanvas(id);
+  if (!c) return;
+  const { ctx, width, height } = c;
+  const year = selectedMonth.slice(0,4);
+  const vals = Array.from({length:12}, (_,i) => spentByCategory(`${year}-${String(i+1).padStart(2,"0")}`, cat));
+  const max = Math.max(...vals, 1);
+  const left = 36, right = 14, top = 28, bottom = 34;
+  const w = width - left - right;
+  const h = height - top - bottom;
+  grid(ctx, left, top, w, h);
+
+  ctx.strokeStyle = meta(cat).color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  vals.forEach((v,i) => {
+    const x = left + w * i / 11;
+    const y = top + h - v / max * h;
+    if (i === 0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  vals.forEach((v,i) => {
+    const x = left + w * i / 11;
+    const y = top + h - v / max * h;
+    ctx.fillStyle = meta(cat).color;
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fill();
+    if (i % 2 === 0) drawText(ctx, `${i+1}`, x-4, height-12, 11, "#777", "700");
+  });
+}
+
+function grid(ctx, left, top, w, h) {
+  ctx.strokeStyle = "#e9eee9";
+  ctx.lineWidth = 1;
+  for (let i=0;i<=4;i++) {
+    const y = top + h*i/4;
+    ctx.beginPath();
+    ctx.moveTo(left,y);
+    ctx.lineTo(left+w,y);
+    ctx.stroke();
+  }
+}
+
+function drawText(ctx, text, x, y, size=14, color="#111", weight="700") {
+  ctx.fillStyle = color;
+  ctx.font = `${weight} ${size}px -apple-system, BlinkMacSystemFont, sans-serif`;
+  ctx.fillText(text, x, y);
+}
+
+function roundRect(ctx, x, y, w, h, r, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function hexToSoft(hex) {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.slice(0,2),16);
+  const g = parseInt(clean.slice(2,4),16);
+  const b = parseInt(clean.slice(4,6),16);
+  return `rgba(${r},${g},${b},0.12)`;
+}
+
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 100);
+});
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js");
+}
+
+render();

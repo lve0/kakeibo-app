@@ -3,7 +3,7 @@
   "short_name": "家計簿",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#faf7f1",
-  "theme_color": "#b9a896",
+  "background_color": "#fbfaf7",
+  "theme_color": "#0f9864",
   "icons": []
 }

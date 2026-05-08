@@ -1,9 +1,209 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/><title>袋分け家計簿</title><link rel="manifest" href="manifest.json"/><link rel="stylesheet" href="style.css"/></head>
-<body><div class="app"><aside class="sidebar"><div class="brand"><div class="brand-icon">🐷</div><div><strong>家計簿アプリ</strong><span>袋分け家計簿</span></div></div><nav><button class="nav-btn active" data-page="home">⌂<span>ホーム</span></button><button class="nav-btn" data-page="input">✎<span>入力</span></button><button class="nav-btn" data-page="history">☷<span>履歴</span></button><button class="nav-btn" data-page="graphs">⌁<span>グラフ</span></button><button class="nav-btn" data-page="settings">⚙<span>設定</span></button></nav><button class="monthly-setup-btn" data-page-jump="settings">月初設定へ</button></aside>
-<main class="main"><section id="home" class="page active-page"><div class="page-head"><div><h1>ホーム</h1><p>今月の予算と支出の状況を確認しましょう</p></div><div class="month-control"><button id="prevMonth">‹</button><strong id="currentMonthLabel"></strong><button id="nextMonth">›</button></div></div><div class="summary-grid"><article class="summary-card"><span>今月の残高（収入−支出）</span><strong id="balanceView">¥0</strong></article><article class="summary-card"><span>今月の支出合計</span><strong id="expenseView">¥0</strong><em id="budgetRateView">予算比 0%</em></article><article class="summary-card"><span>予算合計</span><strong id="budgetTotalView">¥0</strong></article></div><section class="panel"><div class="panel-title"><h2>カテゴリ別の残り予算</h2><button class="ghost" data-page-jump="settings">予算設定</button></div><div id="categoryCards" class="budget-card-grid"></div><div class="legend"><span><i class="safe"></i>余裕あり</span><span><i class="warn"></i>やや注意</span><span><i class="danger"></i>注意</span><span><i class="over"></i>超過</span></div></section><div class="home-bottom"><section class="panel chart-panel"><div class="panel-title"><h2>カテゴリ別 支出割合</h2><button class="ghost" data-page-jump="graphs">詳しく見る</button></div><canvas id="homePie"></canvas></section><section class="panel"><div class="panel-title"><h2>最近の支出</h2><button class="ghost" data-page-jump="history">すべて見る</button></div><div id="recentList" class="list"></div></section></div></section>
-<section id="input" class="page"><div class="page-head"><div><h1>支出入力</h1><p>使ったお金を記録しましょう</p></div></div><form id="expenseForm" class="panel input-panel"><label>日付<input id="expenseDate" type="date"/></label><label>金額<input id="expenseAmount" type="number" inputmode="numeric" placeholder="例：1200"/></label><div><div class="field-title">カテゴリ</div><div id="categoryPicker" class="category-picker"></div></div><label>メモ<input id="expenseMemo" type="text" placeholder="例：ランチ、スタバなど"/></label><label>レシート画像<input id="receiptImage" type="file" accept="image/*"/></label><button class="primary" type="submit">保存する</button><p id="inputMessage" class="message"></p></form></section>
-<section id="history" class="page"><div class="page-head"><div><h1>履歴</h1><p>カテゴリやキーワードで支出を確認できます</p></div></div><div class="history-layout"><section class="panel filter-panel"><h2>フィルター</h2><label>月<input id="filterMonth" type="month"/></label><label>カテゴリ<select id="filterCategory"></select></label><label>キーワード<input id="filterKeyword" type="text" placeholder="メモ検索"/></label></section><section class="panel"><h2>カテゴリ別月間集計</h2><div id="monthlyTotals" class="list compact"></div><h2>支出一覧</h2><div id="historyList" class="list"></div></section></div></section>
-<section id="graphs" class="page"><div class="page-head"><div><h1>グラフ</h1><p>支出の傾向を確認しましょう</p></div></div><div class="graph-tabs"><button class="tab active" data-graph="annual">年間</button><button class="tab" data-graph="monthly">月間</button><button class="tab" data-graph="trend">推移</button></div><section class="panel graph-panel"><canvas id="graphCanvas"></canvas></section></section>
-<section id="settings" class="page"><div class="page-head"><div><h1>設定</h1><p>月ごとの収入・予算・カテゴリを設定できます</p></div></div><div class="settings-layout"><section class="panel"><h2>月初設定</h2><label>対象月<input id="settingMonth" type="month"/></label><label>今月の収入<input id="settingIncome" type="number" inputmode="numeric"/></label><div class="panel-title small-title"><h3>カテゴリ予算</h3><strong id="budgetSumView">合計 ¥0</strong></div><div id="budgetInputs" class="budget-inputs"></div><button id="saveMonthSettings" class="primary">保存する</button></section><section class="panel"><h2>カテゴリ管理</h2><div id="categorySettings" class="list"></div><div class="add-row"><input id="newCategoryName" placeholder="カテゴリ名"/><button id="addCategory">追加</button></div></section><section class="panel"><h2>通知</h2><label class="check"><input id="dailyReminderOn" type="checkbox"/>毎日リマインド</label><label>時間<input id="dailyReminderTime" type="time" value="21:00"/></label><p class="note">本格通知はサーバー追加後に対応予定。初期版では設定だけ保存します。</p></section><section class="panel"><h2>データ管理</h2><button id="exportData">JSONバックアップ</button><label class="file-label">復元<input id="importData" type="file" accept="application/json"/></label></section></div></section></main></div>
-<div id="categorySheet" class="sheet-backdrop" hidden><div class="sheet"><div class="sheet-handle"></div><div class="sheet-head"><button id="closeSheet" class="ghost">戻る</button><h2 id="sheetTitle">カテゴリ詳細</h2><button class="ghost" data-page-jump="input">支出を追加</button></div><div id="sheetContent"></div></div></div><script src="app.js"></script></body></html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>袋分け家計簿</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="side-nav">
+      <div class="brand">
+        <div class="brand-mark">💰</div>
+        <div>
+          <strong>家計簿アプリ</strong>
+          <span>袋分け家計簿</span>
+        </div>
+      </div>
+      <button class="nav active" data-page="home">🏠<span>ホーム</span></button>
+      <button class="nav" data-page="input">＋<span>入力</span></button>
+      <button class="nav" data-page="history">📄<span>履歴</span></button>
+      <button class="nav" data-page="graphs">📊<span>グラフ</span></button>
+      <button class="nav" data-page="settings">⚙️<span>設定</span></button>
+    </aside>
+
+    <main class="main">
+      <section id="home" class="page active">
+        <header class="mobile-header">
+          <h1>ホーム</h1>
+          <button class="icon-button">🔔</button>
+        </header>
+
+        <section class="hero-balance">
+          <div>
+            <p>今月の残高（収入−支出）</p>
+            <strong id="balanceView">¥0</strong>
+          </div>
+          <span id="monthLabel" class="month-pill"></span>
+        </section>
+
+        <div class="section-title">
+          <h2>カテゴリ別の残り予算</h2>
+          <button data-page-jump="settings">一覧編集</button>
+        </div>
+        <div id="categoryCards" class="category-list"></div>
+
+        <section class="card">
+          <div class="section-title inner">
+            <h2>最近の支出</h2>
+            <button data-page-jump="history">すべて見る</button>
+          </div>
+          <div id="recentList" class="list"></div>
+        </section>
+      </section>
+
+      <section id="input" class="page">
+        <header class="mobile-header">
+          <button class="link-button" data-page-jump="home">キャンセル</button>
+          <h1>支出入力</h1>
+          <span></span>
+        </header>
+
+        <form id="expenseForm" class="input-form">
+          <label>日付
+            <input id="expenseDate" type="date">
+          </label>
+
+          <label>金額
+            <div class="money-input">
+              <span>¥</span>
+              <input id="expenseAmount" type="number" inputmode="numeric" placeholder="1,200">
+            </div>
+          </label>
+
+          <div>
+            <h2 class="field-heading">カテゴリ</h2>
+            <div id="categoryPicker" class="category-picker"></div>
+          </div>
+
+          <label>メモ（任意）
+            <textarea id="expenseMemo" placeholder="メモを入力"></textarea>
+          </label>
+
+          <button class="primary" type="submit">支出を追加</button>
+          <p id="inputMessage" class="message"></p>
+        </form>
+      </section>
+
+      <section id="history" class="page">
+        <header class="mobile-header">
+          <h1>履歴</h1>
+          <button class="icon-button">🔍</button>
+        </header>
+
+        <div class="month-row">
+          <button id="historyPrev">‹</button>
+          <input id="filterMonth" type="month">
+          <button id="historyNext">›</button>
+        </div>
+
+        <section class="summary-row">
+          <div class="mini-card">
+            <span>支出合計</span>
+            <strong id="historyExpenseTotal">¥0</strong>
+          </div>
+          <div class="mini-card">
+            <span>収入合計</span>
+            <strong id="historyIncomeTotal">¥0</strong>
+          </div>
+        </section>
+
+        <label class="filter-label">カテゴリ
+          <select id="filterCategory"></select>
+        </label>
+        <label class="filter-label">検索
+          <input id="filterKeyword" placeholder="メモ検索">
+        </label>
+
+        <div id="historyList" class="history-list"></div>
+      </section>
+
+      <section id="graphs" class="page">
+        <header class="mobile-header">
+          <h1>グラフ</h1>
+          <span></span>
+        </header>
+
+        <div class="segmented">
+          <button class="tab active" data-graph="monthly">支出</button>
+          <button class="tab" data-graph="annual">年間</button>
+          <button class="tab" data-graph="trend">推移</button>
+        </div>
+
+        <section class="card chart-card">
+          <h2 id="graphTitle">カテゴリ別 支出割合</h2>
+          <canvas id="graphCanvas"></canvas>
+        </section>
+      </section>
+
+      <section id="settings" class="page">
+        <header class="mobile-header">
+          <h1>設定</h1>
+          <span></span>
+        </header>
+
+        <section class="settings-group">
+          <h2>予算設定</h2>
+          <button class="setting-row" data-open-settings="month">月間予算の設定 <span>›</span></button>
+          <button class="setting-row" data-open-settings="category">カテゴリ別予算の設定 <span>›</span></button>
+        </section>
+
+        <section id="monthSettings" class="settings-panel">
+          <label>対象月
+            <input id="settingMonth" type="month">
+          </label>
+          <label>今月の収入
+            <input id="settingIncome" type="number" inputmode="numeric">
+          </label>
+          <h2>カテゴリ別予算</h2>
+          <div id="budgetInputs" class="budget-inputs"></div>
+          <button id="saveMonthSettings" class="primary">保存する</button>
+        </section>
+
+        <section class="settings-group">
+          <h2>データ</h2>
+          <button id="exportData" class="setting-row">データのエクスポート <span>›</span></button>
+          <label class="setting-row import-row">データのインポート
+            <input id="importData" type="file" accept="application/json">
+            <span>›</span>
+          </label>
+        </section>
+
+        <section class="settings-group">
+          <h2>カテゴリ管理</h2>
+          <div id="categorySettings" class="category-settings"></div>
+          <div class="add-category">
+            <input id="newCategoryName" placeholder="カテゴリ名">
+            <button id="addCategory">追加</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="detailModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <section class="modal-sheet">
+      <div class="sheet-bar"></div>
+      <header class="modal-header">
+        <button data-close-modal>戻る</button>
+        <h2 id="detailTitle">カテゴリ詳細</h2>
+        <button data-page-jump="input">支出を追加</button>
+      </header>
+      <div id="detailContent"></div>
+    </section>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="bottom active" data-page="home">🏠<span>ホーム</span></button>
+    <button class="bottom" data-page="input">＋<span>入力</span></button>
+    <button class="bottom" data-page="history">📄<span>履歴</span></button>
+    <button class="bottom" data-page="graphs">📊<span>グラフ</span></button>
+    <button class="bottom" data-page="settings">⚙️<span>設定</span></button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
